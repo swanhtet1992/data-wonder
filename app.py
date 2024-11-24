@@ -16,9 +16,9 @@ import asyncio
 
 def initialize_components():
     """Initialize all pipeline components."""
-    if 'llama_client' not in st.session_state:
-        try:
-            # Initialize client
+    try:
+        # Initialize client if not already done
+        if 'llama_client' not in st.session_state:
             client = LlamaStackClient(base_url="http://localhost:5001")
             st.session_state.llama_client = client
             
@@ -33,10 +33,27 @@ def initialize_components():
             st.session_state.step_manager = StepManager()
             
             st.success("✅ Components initialized successfully!")
-            
-        except Exception as e:
-            st.error(f"❌ Initialization failed: {str(e)}")
+        
+        # Verify all components are present
+        required_components = [
+            'llama_client',
+            'document_processor',
+            'question_generator',
+            'answer_generator',
+            'step_manager'
+        ]
+        
+        missing_components = [comp for comp in required_components 
+                            if comp not in st.session_state]
+        
+        if missing_components:
+            st.error(f"❌ Missing components: {', '.join(missing_components)}")
             st.stop()
+            
+    except Exception as e:
+        st.error(f"❌ Initialization failed: {str(e)}")
+        st.exception(e)  # Show full traceback in development
+        st.stop()
 
 def main():
     """Main application entry point."""
@@ -46,8 +63,19 @@ def main():
         layout=LAYOUT
     )
     
+    # Initialize state and components
     initialize_session_state()
     initialize_components()
+    
+    # Verify components before proceeding
+    if not all(comp in st.session_state for comp in [
+        'document_processor',
+        'question_generator',
+        'answer_generator'
+    ]):
+        st.error("❌ Application not properly initialized")
+        st.stop()
+        return
     
     page = render_sidebar()
     

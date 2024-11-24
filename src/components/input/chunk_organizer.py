@@ -9,6 +9,9 @@ def render_chunk_pagination(chunks: List[Dict[str, Any]],
     """Render pagination controls."""
     total_pages = math.ceil(len(chunks) / chunks_per_page)
     
+    # Initialize pages with current page
+    pages = page
+    
     col1, col2, col3 = st.columns([2, 3, 2])
     
     with col2:
@@ -19,7 +22,9 @@ def render_chunk_pagination(chunks: List[Dict[str, Any]],
                 value=page,
                 key="chunk_page_slider"
             )
-            st.caption(f"Page {page} of {total_pages}")
+            st.caption(f"Page {pages} of {total_pages}")
+        else:
+            st.caption("Single page")
     
     return (pages - 1) * chunks_per_page
 
@@ -67,9 +72,14 @@ def render_organized_chunks(chunks: List[Dict[str, Any]],
     # Add search functionality
     filtered_chunks = render_chunk_search(chunks)
     
-    # Initialize pagination state
+    # Initialize pagination state if not exists
     if "chunk_page" not in st.session_state:
         st.session_state.chunk_page = 1
+    
+    # Handle empty chunks case
+    if not filtered_chunks:
+        st.info("No chunks to display")
+        return
     
     # Get current page of chunks
     start_idx = render_chunk_pagination(

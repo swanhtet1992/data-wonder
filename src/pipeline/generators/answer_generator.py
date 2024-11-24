@@ -47,18 +47,43 @@ class AnswerGenerator:
     
     def _build_prompt(self, question: Dict[str, Any]) -> str:
         """Build prompt for answer generation."""
-        return f"""Answer this question based on the given context.
-        Format as complete JSON object and wrap in <json> tags:
-        <json>
-        {{
-            "answer": "detailed answer here",
-            "explanation": "reasoning or additional context",
-            "confidence": 0.0-1.0
-        }}
-        </json>
+        prompt = f"""
+                  You are an advanced AI system specialized in generating focused, relevant answers based on provided context. Your task is to create a single, concise answer to a given question using only the information provided.
 
-        Context: {question['context']}
-        Question: {question['question']}"""
+                  First, carefully read the following context: {question['context']}
+
+                  Now, consider this specific question: {question['question']}
+
+                  Your goal is to generate an answer that adheres to the following guidelines:
+
+                  1. The answer must be fully contained within and based solely on the given context.
+                  2. Focus on important or relevant information from the context.
+                  3. Keep the answer concise and to the point.
+                  4. If the answer cannot be found in the context, clearly state that you cannot answer the question.
+
+                  Before presenting your final answer, follow these steps:
+
+                  1. Identify and quote the most relevant parts of the context.
+                  2. List 2-3 potential answers and rate their relevance on a scale of 1-5.
+                  3. For each potential answer, explain why it's relevant or not.
+                  4. Choose the best answer and explain your reasoning for the final choice.
+                  5. Consider how to make the chosen answer as concise as possible without losing essential information.
+                  6. Assess your confidence in the answer on a scale of 0.0 to 1.0, explaining the factors that influenced your confidence level.
+
+                  After completing your analysis, present your final answer as below:
+
+                  <json>
+                    "answer": "Your concise answer here",
+                    "explanation": "Brief explanation of your reasoning",
+                    "confidence": 0.0-1.0
+                  </json>
+
+                  <json> tags are required.
+
+                  Remember to only use the given context as a source for generating the answer and to be as precise and concise as possible.
+                  REMEMBER <json> TAGS ARE REQUIRED.
+                  """
+        return prompt
     
     def _parse_response(self, response: str) -> Dict[str, Any]:
         """Parse response into answer."""
