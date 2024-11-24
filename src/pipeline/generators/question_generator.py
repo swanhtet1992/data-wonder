@@ -17,61 +17,71 @@ class QuestionGenerator:
                       progress_callback: Optional[Callable] = None) -> List[Dict[str, Any]]:
         """Generate questions from context."""
         try:
-            if progress_callback:
-                progress_callback(0.3, "Generating questions...")
+            # Split context into chunks if it's not already chunked
+            if not isinstance(context, list):
+                chunks = [context]
+            else:
+                chunks = context
 
-            messages = [
-                UserMessage(content=self._build_prompt(context), role="user")
-            ]
-            
-            response = self.client.inference.chat_completion(
-                model_id="meta-llama/Llama-3.2-3B-Instruct",
-                messages=messages,
-            )
+            all_questions = []
+            total_chunks = len(chunks)
+
+            for i, chunk in enumerate(chunks):
+                if progress_callback:
+                    progress = i / total_chunks
+                    progress_callback(progress, f"Generating questions for chunk {i+1}/{total_chunks}")
+
+                messages = [
+                    UserMessage(content=self._build_prompt(chunk), role="user")
+                ]
+                
+                response = self.client.inference.chat_completion(
+                    model_id="meta-llama/Llama-3.1-70B-Instruct",
+                    messages=messages,
+                )
+
+                chunk_questions = self._parse_response(response.completion_message.content, chunk)
+                
+                # Add chunk index to each question
+                for q in chunk_questions:
+                    q['chunk_index'] = i
+                
+                all_questions.extend(chunk_questions)
 
             if progress_callback:
-                progress_callback(0.7, "Processing questions...")
+                progress_callback(1.0, f"Generated {len(all_questions)} questions!")
             
-            questions = self._parse_response(response.completion_message.content, context)
-            
-            if progress_callback:
-                progress_callback(1.0, "Questions generated successfully!")
-            
-            return questions
-            
+            return all_questions
+                
         except Exception as e:
             raise ValueError(f"Failed to generate questions: {str(e)}")
         
     def _build_prompt(self, context: str) -> str:
         """Build prompt for question generation."""
-        prompt = f"""You are a question generation AI tasked with creating a single, focused question based on provided context. Here's the context you'll be working with:
+        prompt = f"""You are a question generation AI tasked with creating 2-3 focused questions based on provided context. Here's the context you'll be working with:
                 <context>
                 {context}
                 </context>
 
-                Your goal is to generate one question that can be fully answered using the information in the context above. Follow these guidelines:
+                Your goal is to generate 2-3 questions that can be fully answered using the information in the context above. Follow these guidelines:
 
-                1. Ensure the question is self-contained and understandable without the context.
-                2. The answer must be fully contained within the given context.
+                1. Ensure each question is self-contained and understandable without the context.
+                2. The answers must be fully contained within the given context.
                 3. Focus on important or relevant information from the context.
-                4. Avoid using phrases like "provided context" in the question.
-                5. Keep the question concise, using no more than 10 words.
-                6. Use abbreviations where appropriate to keep the question concise.
+                4. Avoid using phrases like "provided context" in the questions.
+                5. Keep questions concise, using no more than 15 words each.
+                6. Generate a mix of different difficulty levels and question types.
 
-                Before generating the final question, follow these steps:
-
-                1. Identify and list 3-5 key pieces of information from the context.
-                2. Based on these key points, brainstorm 3 potential questions.
-                3. For each potential question, evaluate how well it meets the guidelines above.
-                4. Choose the best question that adheres to all guidelines, or refine one of the questions to meet all criteria.
-                
-                Include difficulty (basic/intermediate/advanced) and type (factual/conceptual/analytical).
-
-                After completing your thought proces, write your final question as below:
+                Format your response as JSON with <json> tags:
                 <json>
                   {{"questions": [
                       {{
-                          "question": "question text",
+                          "question": "First question text",
+                          "difficulty": "basic/intermediate/advanced",
+                          "type": "factual/conceptual/analytical"
+                      }},
+                      {{
+                          "question": "Second question text",
                           "difficulty": "basic/intermediate/advanced",
                           "type": "factual/conceptual/analytical"
                       }}

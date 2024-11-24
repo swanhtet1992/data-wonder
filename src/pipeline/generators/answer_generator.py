@@ -30,7 +30,7 @@ class AnswerGenerator:
                 ]
                 
                 response = self.client.inference.chat_completion(
-                    model_id="meta-llama/Llama-3.2-3B-Instruct",
+                    model_id="meta-llama/Llama-3.1-70B-Instruct",
                     messages=messages
                 )
                 
@@ -84,7 +84,7 @@ class AnswerGenerator:
                   REMEMBER <json> TAGS ARE REQUIRED.
                   """
         return prompt
-    
+
     def _parse_response(self, response: str) -> Dict[str, Any]:
         """Parse response into answer."""
         try:
