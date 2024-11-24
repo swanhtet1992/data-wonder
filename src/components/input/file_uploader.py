@@ -116,8 +116,10 @@ def render_file_uploader(processor: DocumentProcessor) -> None:
             # Show chunks if available
             chunks = get_state('current_chunks')
             metadata = get_state('current_metadata')
+            question_gen = get_state('question_generator')
+            answer_gen = get_state('answer_generator')
             if chunks and metadata:
-                render_chunk_viewer(chunks, metadata)
+                render_chunk_viewer(chunks, metadata, question_gen, answer_gen)
             
         except Exception as e:
             st.error(f"❌ Error loading file: {str(e)}")

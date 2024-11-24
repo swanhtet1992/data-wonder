@@ -9,15 +9,34 @@ from src.components.flow.flow_visualizer import render_flow_visualization
 from src.components.flow.step_manager import StepManager, StepStatus
 from src.components.history import render_history_page
 from src.pipeline.processors.document_processor import DocumentProcessor
+from src.pipeline.generators.question_generator import QuestionGenerator
+from src.pipeline.generators.answer_generator import AnswerGenerator
 from src.config import APP_TITLE, APP_ICON, LAYOUT
 import asyncio
 
-async def initialize_processor() -> DocumentProcessor:
-    """Initialize the document processor."""
-    client = LlamaStackClient(base_url="http://localhost:5001")  # Configure as needed
-    processor = DocumentProcessor(client)
-    await processor.initialize_memory_bank("default_bank")
-    return processor
+def initialize_components():
+    """Initialize all pipeline components."""
+    if 'llama_client' not in st.session_state:
+        try:
+            # Initialize client
+            client = LlamaStackClient(base_url="http://localhost:5001")
+            st.session_state.llama_client = client
+            
+            # Initialize processor and memory bank
+            processor = DocumentProcessor(client)
+            asyncio.run(processor.initialize_memory_bank("default-bank"))
+            
+            # Store components in session state
+            st.session_state.document_processor = processor
+            st.session_state.question_generator = QuestionGenerator(client)
+            st.session_state.answer_generator = AnswerGenerator(client)
+            st.session_state.step_manager = StepManager()
+            
+            st.success("✅ Components initialized successfully!")
+            
+        except Exception as e:
+            st.error(f"❌ Initialization failed: {str(e)}")
+            st.stop()
 
 def main():
     """Main application entry point."""
@@ -28,40 +47,35 @@ def main():
     )
     
     initialize_session_state()
-    
-    # Initialize processor if not already done
-    if 'document_processor' not in st.session_state:
-        processor = asyncio.run(initialize_processor())
-        st.session_state.document_processor = processor
+    initialize_components()
     
     page = render_sidebar()
     
     if page == "Generate Data":
-        render_input_section(st.session_state.document_processor)
+        render_input_section(
+            processor=st.session_state.document_processor,
+            question_gen=st.session_state.question_generator,
+            answer_gen=st.session_state.answer_generator
+        )
         
-        # Check if either data is uploaded or prompt is provided
+        # Check if data is ready for processing
         input_ready = (get_state('uploaded_data') is not None or 
                       get_state('prompt_input') is not None)
         
         if input_ready:
-            # Initialize step manager if not already done
-            if 'step_manager' not in st.session_state:
-                st.session_state.step_manager = StepManager()
-            
             data_type, num_samples = render_configuration_section()
             
-            if st.button("Generate Synthetic Data", type="primary"):
-                # Start the generation process
+            if st.button("Process Document", type="primary"):
                 step_manager = st.session_state.step_manager
                 
                 if get_state('input_type') == 'dataset':
                     step_manager.update_step_status("upload", StepStatus.COMPLETED, 1.0)
-                    step_manager.update_step_status("analyze", StepStatus.RUNNING, 0.0)
+                    step_manager.update_step_status("process", StepStatus.RUNNING, 0.0)
                 else:
                     step_manager.update_step_status("prompt", StepStatus.COMPLETED, 1.0)
-                    step_manager.update_step_status("plan", StepStatus.RUNNING, 0.0)
+                    step_manager.update_step_status("process", StepStatus.RUNNING, 0.0)
             
-            # Render the flow visualization
+            # Render flow visualization
             render_flow_visualization()
     
     else:  # Dataset History page
