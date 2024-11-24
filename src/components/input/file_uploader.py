@@ -47,22 +47,35 @@ def render_file_uploader(processor: DocumentProcessor) -> None:
     # Add configuration options
     with st.expander("⚙️ Processing Configuration"):
         with st.form(key="processing_config"):
-            chunk_size = st.slider(
-                "Maximum Chunk Size (characters)",
-                min_value=500,
-                max_value=5000,
-                value=2000,
-                step=100,
-                help="Maximum size of each document chunk"
-            )
+            col1, col2 = st.columns(2)
             
-            overlap = st.slider(
-                "Chunk Overlap (tokens)",
-                min_value=0,
-                max_value=128,
-                value=64,
-                step=8,
-                help="Number of overlapping tokens between chunks"
+            with col1:
+                chunk_size = st.slider(
+                    "Maximum Chunk Size (characters)",
+                    min_value=500,
+                    max_value=5000,
+                    value=2000,
+                    step=100,
+                    help="Maximum size of each document chunk"
+                )
+            
+            with col2:
+                overlap = st.slider(
+                    "Chunk Overlap (tokens)",
+                    min_value=0,
+                    max_value=128,
+                    value=64,
+                    step=8,
+                    help="Number of overlapping tokens between chunks"
+                )
+            
+            chunks_per_page = st.slider(
+                "Chunks per Page",
+                min_value=3,
+                max_value=20,
+                value=5,
+                step=1,
+                help="Number of chunks to show per page"
             )
             
             submit_config = st.form_submit_button("Apply Configuration")
@@ -70,6 +83,7 @@ def render_file_uploader(processor: DocumentProcessor) -> None:
             if submit_config:
                 processor.config.max_chunk_size = chunk_size
                 processor.config.overlap_tokens = overlap
+                set_state('chunks_per_page', chunks_per_page)
                 st.success("✅ Configuration updated!")
     
     # File uploader
@@ -94,8 +108,10 @@ def render_file_uploader(processor: DocumentProcessor) -> None:
                 render_data_preview(content)
             
             # Process document button
-            if st.button("🔄 Process Document", type="primary"):
-                asyncio.run(process_uploaded_file(processor, str(content)))
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                if st.button("🔄 Process Document", type="primary", use_container_width=True):
+                    asyncio.run(process_uploaded_file(processor, str(content)))
             
             # Show chunks if available
             chunks = get_state('current_chunks')
@@ -104,4 +120,4 @@ def render_file_uploader(processor: DocumentProcessor) -> None:
                 render_chunk_viewer(chunks, metadata)
             
         except Exception as e:
-            st.error(f"❌ Error loading file: {str(e)}") 
+            st.error(f"❌ Error loading file: {str(e)}")
