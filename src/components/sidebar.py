@@ -18,4 +18,4 @@ def render_sidebar() -> str:
         st.markdown("---")
         st.markdown(ABOUT_TEXT)
         
-        return page 
+        return page

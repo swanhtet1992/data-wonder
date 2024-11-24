@@ -30,3 +30,31 @@ This app helps you generate synthetic data from your existing datasets.
 3. Generate synthetic data
 4. Download results
 """ 
+
+# Prompt templates
+PROMPT_TEMPLATES = {
+    "Q&A Generation": """Generate a Q&A dataset about [topic].
+Include:
+- Diverse question types (what, why, how)
+- Varying complexity levels
+- Clear and concise answers
+- [Specific requirements]""",
+
+    "Conversation Dataset": """Create a dataset of conversations between [participants].
+Format:
+- Natural dialogue flow
+- Multiple turns
+- Different scenarios
+- [Specific characteristics]""",
+
+    "Technical Documentation": """Generate technical documentation examples for [subject].
+Include:
+- API descriptions
+- Usage examples
+- Error scenarios
+- [Technical details]""",
+}
+
+# Input validation
+MAX_PROMPT_LENGTH = 4000
+MIN_PROMPT_LENGTH = 10 
