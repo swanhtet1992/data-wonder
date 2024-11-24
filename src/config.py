@@ -16,8 +16,17 @@ DEFAULT_SAMPLES = 10
 GENERATION_STEPS = ["Data Extraction", "Planning", "Generation", "Validation"]
 
 # File settings
-ALLOWED_EXTENSIONS = ["csv", "txt"]
+ALLOWED_EXTENSIONS = ["csv", "txt", "md", "rst"]
 OUTPUT_DIR = "generated_datasets"
+
+# Processing settings
+DEFAULT_CHUNK_SIZE = 2000
+DEFAULT_OVERLAP = 64
+DEFAULT_MIN_CHUNK_SIZE = 100
+
+# Memory bank settings
+DEFAULT_MEMORY_BANK = "knowledge_base"
+DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 # About text
 ABOUT_TEXT = """
