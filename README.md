@@ -102,9 +102,44 @@ To get started with the Synthetic Data Generator App, follow these steps:
 ### **Requirements**  
 - Python 3.9+  
 - Streamlit 1.25+  
-- OpenAI API Key (for LLM-based data generation)  
+- OpenAI API Key (for LLM-based data generation)
+- Groq API Key (for high-performance inference)
+- llama-stack with Groq support
 
-### **Steps**  
+### **Setting up llama-stack with Groq**
+
+1. Clone the llama-stack repository with Groq support:
+   ```bash
+   git clone https://github.com/swanhtet1992/llama-stack.git
+   cd llama-stack
+   git checkout groq
+   ```
+
+2. Install llama-stack:
+   ```bash
+   pip install -e .
+   ```
+
+3. Build the llama-stack distribution with Groq template:
+   ```bash
+   llama stack build --template groq
+   ```
+   This will create necessary configuration files for running llama-stack with Groq.
+
+4. Start the llama-stack server:
+   ```bash
+   llama stack run groq --port 5001
+   ```
+   The server will be available at `http://localhost:5001`
+
+5. Verify the server is running by checking the health endpoint:
+   ```bash
+   curl http://localhost:5001/alpha/health
+   ```
+
+For more detailed information about building llama-stack distributions, refer to the [official documentation](https://llama-stack.readthedocs.io/en/latest/distributions/building_distro.html).
+
+### **Setting up the Synthetic Data Generator**
 
 1. Clone the repository:  
    ```bash  
@@ -119,12 +154,37 @@ To get started with the Synthetic Data Generator App, follow these steps:
     uv install  
    ```  
 
-3. Run the app:  
+3. Configure environment variables:
+   ```bash
+   # Create .env file
+   touch .env
+
+   # Add the following variables
+   GROQ_API_KEY=your_groq_api_key
+   LLAMA_STACK_URL=http://localhost:5001
+   ```
+
+4. Run the app:  
    ```bash  
     streamlit run app.py  
    ```  
 
-4. Open the app in your browser at `http://localhost:8501`.  
+5. Open the app in your browser at `http://localhost:8501`.  
+
+### **Troubleshooting llama-stack**
+
+If you encounter issues with llama-stack:
+
+1. Verify your Groq API key is correctly set in the environment
+2. Check the llama-stack server logs for any error messages
+3. Ensure the server port (5001) is not being used by another application
+4. If the build fails, try cleaning the build directory:
+   ```bash
+   rm -rf ~/.llama/distributions/
+   llama stack build --template groq
+   ```
+
+For additional help, refer to the [llama-stack documentation](https://llama-stack.readthedocs.io/) or open an issue in the repository.
 
 ---
 
